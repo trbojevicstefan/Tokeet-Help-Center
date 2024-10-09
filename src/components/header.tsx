@@ -1,24 +1,32 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Image from 'next/image';
 import Link from 'next/link';
 import { fetchSearchResults } from '../utils/sanity/fetchSearchResults ';
 
+// Define the type for suggestion
+interface Suggestion {
+  _id: string;
+  title: string;
+  description: string;
+  snippet?: string; // Allowing snippet to be undefined
+  slug: string;
+}
+
 export default function HeaderComponent() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [debouncedQuery, setDebouncedQuery] = useState('');
-  const [selectedIndex, setSelectedIndex] = useState(-1); 
+  const [selectedIndex, setSelectedIndex] = useState(-1);
 
   useEffect(() => {
     const handler = setTimeout(() => {
       if (searchQuery.trim()) {
         setDebouncedQuery(searchQuery.trim());
       } else {
-        // If the search query is empty, clear suggestions
         setSuggestions([]);
       }
     }, 500);
@@ -31,7 +39,7 @@ export default function HeaderComponent() {
   useEffect(() => {
     const handleSearch = async (query: string) => {
       const results = await fetchSearchResults(query);
-      setSuggestions(results);
+      setSuggestions(results); // This should now work without error
     };
 
     if (debouncedQuery) {

@@ -12,7 +12,7 @@ import SkeletonCard from '@/components/ui/skeletonCard'; // Import SkeletonCard
 
 export default function ArticleView() {
   const { slug } = useParams();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [article, setArticle] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true); // Add loading state
   const [selectedRating, setSelectedRating] = useState<number | null>(null); // State for storing the selected rating
@@ -118,7 +118,11 @@ export default function ArticleView() {
                   );
                 } else if (block._type === 'htmlEmbed') {
                   return (
-                    <div key={idx} dangerouslySetInnerHTML={{ __html: block.html }} className="my-4 flex justify-center" /> /* Center HTML Embed */
+                    <div
+                      key={idx}
+                      dangerouslySetInnerHTML={{ __html: block.html || '' }} // Safely handling undefined html content
+                      className="my-4 flex justify-center"
+                    />
                   );
                 }
                 return <p key={idx}>Unsupported block type: {block._type}</p>;
