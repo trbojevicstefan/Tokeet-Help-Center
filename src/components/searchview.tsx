@@ -6,10 +6,17 @@ import { fetchSearchResults } from '../utils/sanity/fetchSearchResults ';
 import Link from 'next/link';
 import SkeletonCard from '@/components/ui/skeletonCard'; // Import the SkeletonCard
 
+interface ArticleType {
+  _id: string;
+  title: string;
+  description: string;
+  slug: string;
+}
+
 export default function SearchView() {
   const searchParams = useSearchParams();
   const query = searchParams.get('query') || '';  // Get search query from the URL
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<ArticleType[]>([]); // Use the correct type instead of any
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -27,7 +34,8 @@ export default function SearchView() {
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">Search results for "{query}"</h1>
+      <h1 className="text-3xl font-bold mb-8">Search results for &quot;{query}&quot;</h1>
+
         
         {isLoading ? (
           <div className="space-y-8">

@@ -22,7 +22,6 @@ interface Category {
 }
 
 export function HelpcenterHomepageComponent() {
-  const [searchQuery, setSearchQuery] = useState<string>('');
   const [topArticles, setTopArticles] = useState<Article[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
