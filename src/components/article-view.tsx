@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
 import Breadcrumbs from '@/components/Breadcrumbs'; // Import Breadcrumbs component
 import { fetchSingleArticle } from '@/utils/sanity/HelpCenterData';
@@ -10,42 +9,85 @@ import { incrementArticleViewCount } from '@/utils/sanity/incrementViewCount'; /
 import { incrementArticleRating } from '@/utils/sanity/incrementArticleRating'; // Import rating increment function
 import SkeletonCard from '@/components/ui/skeletonCard'; // Import SkeletonCard
 
+interface Article {
+  _id: string;
+  title: string;
+  category?: {
+    slug: string;
+    title: string;
+  };
+  subCategory?: {
+    slug: string;
+    title: string;
+  };
+  content: Array<Block | ImageBlock | HtmlEmbedBlock>;
+  relatedArticles?: Array<{
+    slug: string;
+    title: string;
+  }>;
+}
+
+interface Block {
+  _type: 'block';
+  style: string;
+  children: Array<Span>;
+  markDefs?: Array<{ _key: string; _type: string; href: string }>;
+}
+
+interface Span {
+  _key: string;
+  _type: 'span';
+  text: string;
+  marks?: string[];
+}
+
+interface ImageBlock {
+  _type: 'image';
+  asset: {
+    _ref: string;
+  };
+  alt?: string;
+}
+
+interface HtmlEmbedBlock {
+  _type: 'htmlEmbed';
+  html: string;
+}
+
 export default function ArticleView() {
   const { slug } = useParams();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [article, setArticle] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true); // Add loading state
-  const [selectedRating, setSelectedRating] = useState<number | null>(null); // State for storing the selected rating
-  const [hasRated, setHasRated] = useState(false); // State to track if the user has rated
+  const [article, setArticle] = useState<Article | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedRating, setSelectedRating] = useState<number | null>(null);
+  const [hasRated, setHasRated] = useState(false);
 
   // Function to handle rating submission
   const handleRatingClick = async (rating: number) => {
     setSelectedRating(rating);
     if (article && article._id) {
-      await incrementArticleRating(article._id, rating); // Increment the article rating
-      setHasRated(true); // User has rated
+      await incrementArticleRating(article._id, rating);
+      setHasRated(true);
     }
   };
 
   useEffect(() => {
     if (typeof slug === 'string') {
       fetchSingleArticle(slug).then(fetchedArticle => {
-        setArticle(fetchedArticle);
-        incrementArticleViewCount(fetchedArticle._id); // Increment the view count for the article
-        setIsLoading(false); // Disable loading state after article is fetched
+        setArticle(fetchedArticle as Article);
+        incrementArticleViewCount(fetchedArticle._id);
+        setIsLoading(false);
       });
     }
   }, [slug]);
 
   if (isLoading) {
-    // Return the skeleton while the content is loading
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-4">
           <Breadcrumbs />
         </div>
         <main className="container mx-auto px-4 py-8">
-          <SkeletonCard /> {/* Render SkeletonCard while loading */}
+          <SkeletonCard />
         </main>
       </div>
     );
@@ -56,7 +98,7 @@ export default function ArticleView() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Breadcrumbs Container */}
-      <div className="container mx-auto px-4 py-4"> {/* Align Breadcrumbs */}
+      <div className="container mx-auto px-4 py-4">
         <Breadcrumbs
           category={article?.category ? { slug: article.category.slug, title: article.category.title } : undefined}
           subCategory={article?.subCategory ? { slug: article.subCategory.slug, title: article.subCategory.title } : undefined}
@@ -66,22 +108,23 @@ export default function ArticleView() {
 
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto bg-white shadow-md rounded-lg overflow-hidden">
-          <div className="p-6"> {/* Center the content */}
-            <h1 className="text-3xl font-bold mb-4 text-center">{article.title}</h1> {/* Centered Title */}
-            <div className="prose max-w-none"> {/* Center Text */}
-              {article.content.map((block: any, idx: number) => {
-                if (block._type === 'block') {
-                  const BlockComponent = block.style === 'h1' ? 'h1'
-                    : block.style === 'h2' ? 'h2'
-                    : block.style === 'h3' ? 'h3'
-                    : block.style === 'blockquote' ? 'blockquote'
+          <div className="p-6">
+            <h1 className="text-3xl font-bold mb-4 text-center">{article.title}</h1>
+            <div className="prose max-w-none">
+              {article.content.map((block, idx) => {
+                if ((block as Block)._type === 'block') {
+                  const blockContent = block as Block;
+                  const BlockComponent = blockContent.style === 'h1' ? 'h1'
+                    : blockContent.style === 'h2' ? 'h2'
+                    : blockContent.style === 'h3' ? 'h3'
+                    : blockContent.style === 'blockquote' ? 'blockquote'
                     : 'p';
                   return (
-                    <BlockComponent key={idx} className={block.style === 'blockquote' ? 'italic border-l-4 pl-4' : ''}>
-                      {block.children.map((child: any) => {
+                    <BlockComponent key={idx} className={blockContent.style === 'blockquote' ? 'italic border-l-4 pl-4' : ''}>
+                      {blockContent.children.map((child) => {
                         if (child._type === 'span') {
                           if (child.marks?.length) {
-                            const mark = block.markDefs?.find((mark: any) => mark._key === child.marks[0]);
+                            const mark = blockContent.markDefs?.find(mark => mark._key === child.marks![0]);
                             if (mark && mark._type === 'link') {
                               const href = mark.href.startsWith('http') ? mark.href : `https://${mark.href}`;
                               return (
@@ -103,29 +146,29 @@ export default function ArticleView() {
                       })}
                     </BlockComponent>
                   );
-                } else if (block._type === 'image') {
+                } else if ((block as ImageBlock)._type === 'image') {
+                  const imageBlock = block as ImageBlock;
+                  const imageUrl = `https://cdn.sanity.io/images/z9ibsxa0/production/${imageBlock.asset._ref.split('-')[1]}-${imageBlock.asset._ref.split('-')[2]}.${imageBlock.asset._ref.split('-')[3]}`;
                   return (
-                    <div className="flex justify-center"> {/* Center Image */}
-                      <Image
-                        key={idx}
-                        src={`https://cdn.sanity.io/images/z9ibsxa0/production/${block.asset._ref.split('-')[1]}-${block.asset._ref.split('-')[2]}.${block.asset._ref.split('-')[3]}`}
-                        alt={block.alt || 'Image'}
-                        width={800}
-                        height={250}
+                    <div className="flex justify-center" key={idx}>
+                      <img
+                        src={imageUrl}
+                        alt={imageBlock.alt || 'Image'}
                         className="my-4"
                       />
                     </div>
                   );
-                } else if (block._type === 'htmlEmbed') {
+                } else if ((block as HtmlEmbedBlock)._type === 'htmlEmbed') {
+                  const htmlEmbedBlock = block as HtmlEmbedBlock;
                   return (
                     <div
                       key={idx}
-                      dangerouslySetInnerHTML={{ __html: block.html || '' }} // Safely handling undefined html content
+                      dangerouslySetInnerHTML={{ __html: htmlEmbedBlock.html || '' }}
                       className="my-4 flex justify-center"
                     />
                   );
                 }
-                return <p key={idx}>Unsupported block type: {block._type}</p>;
+                return <p key={idx}>Unsupported block type: {(block as Block)._type}</p>;
               })}
             </div>
           </div>
@@ -139,8 +182,8 @@ export default function ArticleView() {
               <button
                 key={index}
                 className={`text-4xl hover:scale-110 transition-transform ${selectedRating === 3 - index ? 'text-yellow-500' : ''}`}
-                onClick={() => handleRatingClick(3 - index)} // 😍 = 3, 😊 = 2, 😐 = 1
-                disabled={hasRated} // Disable buttons after rating
+                onClick={() => handleRatingClick(3 - index)}
+                disabled={hasRated}
               >
                 {emoji}
               </button>
@@ -153,8 +196,8 @@ export default function ArticleView() {
           <div className="mt-8">
             <h2 className="text-xl font-semibold mb-4">Related Articles</h2>
             <ul className="space-y-2">
-              {article.relatedArticles.map((relatedArticle: any, index: number) => (
-                <li key={index}>
+              {article.relatedArticles.map((relatedArticle) => (
+                <li key={relatedArticle.slug}>
                   <Link href={`/article/${relatedArticle.slug}`} className="text-blue-600 hover:underline">
                     {relatedArticle.title}
                   </Link>
