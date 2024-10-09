@@ -1,6 +1,5 @@
 import HeaderComponent from '@/components/header';
 import SubcategoryViewComponent from '@/components/subcategoryview';
-import Breadcrumbs from '@/components/Breadcrumbs'; // Assuming you have the Breadcrumbs component created
 
 
 export default function SubcategoryPage() {

@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import Link from 'next/link';
 import { fetchTopArticles, fetchHelpCategories } from "../utils/sanity/HelpCenterData";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
 import SkeletonCard from './ui/skeletonCard';  // Default import
 
 
