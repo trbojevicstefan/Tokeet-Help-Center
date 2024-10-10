@@ -2,17 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Font settings */
 body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
 @layer utilities {
+  /* Text balance utility */
   .text-balance {
     text-wrap: balance;
   }
-  .text-balance {
-    text-wrap: balance;
-  }
+
   /* Custom scrollbar hiding utility */
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
@@ -23,7 +23,6 @@ body {
     scrollbar-width: none; /* Firefox */
   }
 }
-
 
 @layer base {
   :root {
@@ -53,6 +52,7 @@ body {
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
+
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
@@ -82,6 +82,7 @@ body {
 }
 
 @layer base {
+  /* Apply the border color and base colors */
   * {
     @apply border-border;
   }

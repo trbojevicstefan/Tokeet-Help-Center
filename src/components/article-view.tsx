@@ -164,7 +164,7 @@ export default function ArticleView() {
                     <div
                       key={idx}
                       dangerouslySetInnerHTML={{ __html: htmlEmbedBlock.html || '' }}
-                      className="my-4 flex justify-center"
+                      className="my-4"
                     />
                   );
                 }
