@@ -5,6 +5,7 @@ import { useTheme } from '@/context/ThemeProvider'
 import { PortableText, PortableTextReactComponents } from '@portabletext/react'
 import ReactMarkdown from 'react-markdown'
 import { client } from '../utils/sanity/sanity.cli'
+import { urlFor } from '../utils/sanity/imageUrl' // Import the URL generator utility
 import Image from 'next/image'
 
 interface ArticleViewProps {
@@ -14,7 +15,7 @@ interface ArticleViewProps {
 interface ImageProps {
   value?: {
     asset: {
-      url: string
+      _ref: string
     }
     alt?: string
   }
@@ -35,7 +36,7 @@ interface VideoEmbedProps {
 type ArticleContent = {
   _type: 'image' | 'dangerBlock' | 'infoBlock' | 'noteBlock' | 'videoEmbed' | 'htmlEmbed' | string
   asset?: {
-    url: string
+    _ref: string
   }
   alt?: string
   body?: string
@@ -105,10 +106,10 @@ export default function ArticleView({ slug }: ArticleViewProps) {
   const myPortableTextComponents: Partial<PortableTextReactComponents> = {
     types: {
       image: ({ value }: ImageProps) => {
-        if (!value || !value.asset?.url) return null
+        if (!value || !value.asset?._ref) return null
         return (
           <Image
-            src={value.asset.url}
+            src={urlFor(value.asset).width(800).url()} // Generate URL using the utility
             alt={value.alt || 'Image'}
             width={800}
             height={450}
@@ -148,8 +149,8 @@ export default function ArticleView({ slug }: ArticleViewProps) {
       ),
     },
     marks: {
-      strong: ({ children }: { children?: React.ReactNode }) => <strong className="font-bold">{children}</strong>,
-      em: ({ children }: { children?: React.ReactNode }) => <em className="italic">{children}</em>,
+      strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+      em: ({ children }) => <em className="italic">{children}</em>,
       link: ({ children, value }: { children?: React.ReactNode; value?: { href: string } }) => (
         <a
           href={value?.href || '#'}
@@ -162,9 +163,9 @@ export default function ArticleView({ slug }: ArticleViewProps) {
       ),
     },
     block: {
-      h1: ({ children }: { children?: React.ReactNode }) => <h1 className="text-4xl font-bold my-6">{children}</h1>,
-      h2: ({ children }: { children?: React.ReactNode }) => <h2 className="text-3xl font-semibold my-4">{children}</h2>,
-      normal: ({ children }: { children?: React.ReactNode }) => <p className="mb-4">{children}</p>,
+      h1: ({ children }) => <h1 className="text-4xl font-bold my-6">{children}</h1>,
+      h2: ({ children }) => <h2 className="text-3xl font-semibold my-4">{children}</h2>,
+      normal: ({ children }) => <p className="mb-4">{children}</p>,
     },
   }
 

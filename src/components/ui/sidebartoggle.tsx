@@ -9,7 +9,8 @@ const MenuIcon: React.FC<MenuIconProps> = ({ fill = "currentColor" }) => (
     viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
-    className="icon-xl-heavy max-md:hidden"
+    className="icon-xl-heavy"
+
   >
     <path
       fillRule="evenodd"

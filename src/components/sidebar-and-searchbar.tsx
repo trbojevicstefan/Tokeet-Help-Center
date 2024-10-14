@@ -177,11 +177,12 @@ export function SidebarAndSearchbarComponent({ children }: SidebarAndSearchbarCo
       <header className="bg-white shadow-sm dark:bg-[#171717]">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between p-2">
           <div className="flex items-center">
-            <button
-              onClick={toggleSidebar}
-              className="p-1 hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700">
-              <MenuIcon fill={isDarkTheme ? "#FFFFFF" : "#000000"} />
-            </button>
+          <button
+  onClick={toggleSidebar}
+  className="p-1 hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700">
+  <MenuIcon fill={isDarkTheme ? "#FFFFFF" : "#000000"} />
+</button>
+
           </div>
           <div className="flex flex-1 items-center justify-center px-4 py-2">
             <div className="relative w-full max-w-2xl">

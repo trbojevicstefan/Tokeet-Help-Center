@@ -1,4 +1,4 @@
-import { client } from "../sanity/sanity.cli"
+ import { client } from "../sanity/sanity.cli"
 
 // Function to increment view count of an article
 export async function incrementArticleViewCount(articleId: string) {
