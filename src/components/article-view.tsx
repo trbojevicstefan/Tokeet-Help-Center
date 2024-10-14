@@ -1,212 +1,208 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import Breadcrumbs from '@/components/Breadcrumbs'; // Import Breadcrumbs component
-import { fetchSingleArticle } from '@/utils/sanity/HelpCenterData';
-import { incrementArticleViewCount } from '@/utils/sanity/incrementViewCount'; // Import the function to increment view count
-import { incrementArticleRating } from '@/utils/sanity/incrementArticleRating'; // Import rating increment function
-import SkeletonCard from '@/components/ui/skeletonCard'; // Import SkeletonCard
+import React, { useEffect, useState } from 'react'
+import { useTheme } from '@/context/ThemeProvider'
+import { PortableText, PortableTextReactComponents } from '@portabletext/react'
+import ReactMarkdown from 'react-markdown'
+import { client } from '../utils/sanity/sanity.cli'
+import Image from 'next/image'
 
-interface Article {
-  _id: string;
-  title: string;
-  category?: {
-    slug: string;
-    title: string;
-  };
-  subCategory?: {
-    slug: string;
-    title: string;
-  };
-  content: Array<Block | ImageBlock | HtmlEmbedBlock>;
-  relatedArticles?: Array<{
-    slug: string;
-    title: string;
-  }>;
+interface ArticleViewProps {
+  slug: string
 }
 
-interface Block {
-  _type: 'block';
-  style: string;
-  children: Array<Span>;
-  markDefs?: Array<{ _key: string; _type: string; href: string }>;
-}
-
-interface Span {
-  _key: string;
-  _type: 'span';
-  text: string;
-  marks?: string[];
-}
-
-interface ImageBlock {
-  _type: 'image';
-  asset: {
-    _ref: string;
-  };
-  alt?: string;
-}
-
-interface HtmlEmbedBlock {
-  _type: 'htmlEmbed';
-  html: string;
-}
-
-export default function ArticleView() {
-  const { slug } = useParams();
-  const [article, setArticle] = useState<Article | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedRating, setSelectedRating] = useState<number | null>(null);
-  const [hasRated, setHasRated] = useState(false);
-
-  // Function to handle rating submission
-  const handleRatingClick = async (rating: number) => {
-    setSelectedRating(rating);
-    if (article && article._id) {
-      await incrementArticleRating(article._id, rating);
-      setHasRated(true);
+interface ImageProps {
+  value?: {
+    asset: {
+      url: string
     }
-  };
+    alt?: string
+  }
+}
+
+interface BlockProps {
+  value?: {
+    body: string
+  }
+}
+
+interface VideoEmbedProps {
+  value?: {
+    url: string
+  }
+}
+
+type ArticleContent = {
+  _type: 'image' | 'dangerBlock' | 'infoBlock' | 'noteBlock' | 'videoEmbed' | 'htmlEmbed' | string
+  asset?: {
+    url: string
+  }
+  alt?: string
+  body?: string
+  url?: string
+  html?: string
+}
+
+interface ArticleData {
+  title: string
+  content?: ArticleContent[]
+  markdownContent?: string
+}
+
+export default function ArticleView({ slug }: ArticleViewProps) {
+  const { isDarkTheme } = useTheme()
+  const [article, setArticle] = useState<ArticleData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [showSpinner, setShowSpinner] = useState(false)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
-    if (typeof slug === 'string') {
-      fetchSingleArticle(slug).then(fetchedArticle => {
-        setArticle(fetchedArticle as Article);
-        incrementArticleViewCount(fetchedArticle._id);
-        setIsLoading(false);
-      });
-    }
-  }, [slug]);
+    if (slug) {
+      setIsLoading(true)
+      setShowSpinner(false)
+      setArticle(null)
+      setError(false)
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-4">
-          <Breadcrumbs />
+      const spinnerTimer = setTimeout(() => {
+        if (isLoading) {
+          setShowSpinner(true)
+        }
+      }, 600)
+
+      const fetchArticle = async () => {
+        try {
+          const data = await client.fetch(
+            `*[_type == "article" && slug.current == $slug][0]{
+              title,
+              content,
+              markdownContent
+            }`,
+            { slug }
+          )
+
+          if (data) {
+            setArticle(data)
+          } else {
+            setError(true)
+            console.error('Article not found.')
+          }
+        } catch (error) {
+          setError(true)
+          console.error('Failed to fetch article:', error)
+        } finally {
+          setIsLoading(false)
+          clearTimeout(spinnerTimer)
+        }
+      }
+
+      fetchArticle()
+
+      return () => clearTimeout(spinnerTimer)
+    }
+  }, [slug])
+
+  // Custom PortableText Components for Rendering Custom Blocks
+  const myPortableTextComponents: Partial<PortableTextReactComponents> = {
+    types: {
+      image: ({ value }: ImageProps) => {
+        if (!value || !value.asset?.url) return null
+        return (
+          <Image
+            src={value.asset.url}
+            alt={value.alt || 'Image'}
+            width={800}
+            height={450}
+            className="my-4 rounded-lg"
+          />
+        )
+      },
+      dangerBlock: ({ value }: BlockProps) => (
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 my-4" role="alert">
+          <p>{value?.body}</p>
         </div>
-        <main className="container mx-auto px-4 py-8">
-          <SkeletonCard />
-        </main>
-      </div>
-    );
+      ),
+      infoBlock: ({ value }: BlockProps) => (
+        <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 my-4" role="alert">
+          <p>{value?.body}</p>
+        </div>
+      ),
+      noteBlock: ({ value }: BlockProps) => (
+        <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 my-4" role="alert">
+          <p>{value?.body}</p>
+        </div>
+      ),
+      videoEmbed: ({ value }: VideoEmbedProps) => (
+        <div className="my-4">
+          <iframe
+            width="100%"
+            height="315"
+            src={value?.url}
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      ),
+      htmlEmbed: ({ value }: { value?: { html: string } }) => (
+        <div className="my-4" dangerouslySetInnerHTML={{ __html: value?.html || '' }} />
+      ),
+    },
+    marks: {
+      strong: ({ children }: { children?: React.ReactNode }) => <strong className="font-bold">{children}</strong>,
+      em: ({ children }: { children?: React.ReactNode }) => <em className="italic">{children}</em>,
+      link: ({ children, value }: { children?: React.ReactNode; value?: { href: string } }) => (
+        <a
+          href={value?.href || '#'}
+          className="text-blue-500 underline"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {children}
+        </a>
+      ),
+    },
+    block: {
+      h1: ({ children }: { children?: React.ReactNode }) => <h1 className="text-4xl font-bold my-6">{children}</h1>,
+      h2: ({ children }: { children?: React.ReactNode }) => <h2 className="text-3xl font-semibold my-4">{children}</h2>,
+      normal: ({ children }: { children?: React.ReactNode }) => <p className="mb-4">{children}</p>,
+    },
   }
 
-  if (!article) return <div>Loading...</div>;
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Breadcrumbs Container */}
-      <div className="container mx-auto px-4 py-4">
-        <Breadcrumbs
-          category={article?.category ? { slug: article.category.slug, title: article.category.title } : undefined}
-          subCategory={article?.subCategory ? { slug: article.subCategory.slug, title: article.subCategory.title } : undefined}
-          article={{ title: article.title }}
-        />
-      </div>
-
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-3xl mx-auto bg-white shadow-md rounded-lg overflow-hidden">
-          <div className="p-6">
-            <h1 className="text-3xl font-bold mb-4 text-center">{article.title}</h1>
-            <div className="prose max-w-none">
-              {article.content.map((block, idx) => {
-                if ((block as Block)._type === 'block') {
-                  const blockContent = block as Block;
-                  const BlockComponent = blockContent.style === 'h1' ? 'h1'
-                    : blockContent.style === 'h2' ? 'h2'
-                    : blockContent.style === 'h3' ? 'h3'
-                    : blockContent.style === 'blockquote' ? 'blockquote'
-                    : 'p';
-                  return (
-                    <BlockComponent key={idx} className={blockContent.style === 'blockquote' ? 'italic border-l-4 pl-4' : ''}>
-                      {blockContent.children.map((child) => {
-                        if (child._type === 'span') {
-                          if (child.marks?.length) {
-                            const mark = blockContent.markDefs?.find(mark => mark._key === child.marks![0]);
-                            if (mark && mark._type === 'link') {
-                              const href = mark.href.startsWith('http') ? mark.href : `https://${mark.href}`;
-                              return (
-                                <a
-                                  key={child._key}
-                                  href={href}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-600 hover:underline"
-                                >
-                                  {child.text}
-                                </a>
-                              );
-                            }
-                          }
-                          return <span key={child._key} className={child.marks?.includes('strong') ? 'font-bold' : child.marks?.includes('em') ? 'italic' : ''}>{child.text}</span>;
-                        }
-                        return null;
-                      })}
-                    </BlockComponent>
-                  );
-                } else if ((block as ImageBlock)._type === 'image') {
-                  const imageBlock = block as ImageBlock;
-                  const imageUrl = `https://cdn.sanity.io/images/z9ibsxa0/production/${imageBlock.asset._ref.split('-')[1]}-${imageBlock.asset._ref.split('-')[2]}.${imageBlock.asset._ref.split('-')[3]}`;
-                  return (
-                    <div className="flex justify-center" key={idx}>
-                      <img
-                        src={imageUrl}
-                        alt={imageBlock.alt || 'Image'}
-                        className="my-4"
-                      />
-                    </div>
-                  );
-                } else if ((block as HtmlEmbedBlock)._type === 'htmlEmbed') {
-                  const htmlEmbedBlock = block as HtmlEmbedBlock;
-                  return (
-                    <div
-                      key={idx}
-                      dangerouslySetInnerHTML={{ __html: htmlEmbedBlock.html || '' }}
-                      className="my-4"
-                    />
-                  );
-                }
-                return <p key={idx}>Unsupported block type: {(block as Block)._type}</p>;
-              })}
-            </div>
+    <div className={`min-h-screen transition-colors duration-300 ${isDarkTheme ? 'bg-[#212121] text-white' : 'bg-white text-black'}`}>
+      {error ? (
+        <div className="container mx-auto max-w-3xl p-4 h-screen flex flex-col justify-center items-center">
+          <h2 className="text-2xl font-bold text-red-600 text-center mb-4">Failed to load article.</h2>
+          <p className="text-center">Please try refreshing the page or check back later.</p>
+        </div>
+      ) : article ? (
+        <main className="container mx-auto max-w-3xl p-4 h-screen flex flex-col">
+          <div className="flex-grow overflow-y-auto pr-4">
+            <h1 className="text-3xl font-bold text-center mb-4">{article.title}</h1>
+            {article.content && (
+              <PortableText value={article.content} components={myPortableTextComponents} />
+            )}
+            {article.markdownContent && (
+              <ReactMarkdown>{article.markdownContent}</ReactMarkdown>
+            )}
+          </div>
+        </main>
+      ) : null}
+      {isLoading && !showSpinner && (
+        <div className="container mx-auto max-w-3xl p-4 h-screen flex flex-col animate-pulse">
+          <div className="h-10 bg-gray-300 rounded mb-4"></div>
+          <div className="flex-grow overflow-hidden pr-4">
+            <div className="h-5 bg-gray-300 rounded my-2"></div>
+            <div className="h-5 bg-gray-300 rounded my-2"></div>
+            <div className="h-5 bg-gray-300 rounded my-2"></div>
           </div>
         </div>
-
-        {/* Rating Section */}
-        <div className="mt-8 text-center">
-          <h2 className="text-xl font-semibold mb-4">How did we do?</h2>
-          <div className="flex justify-center space-x-4">
-            {['😍', '😊', '😐'].map((emoji, index) => (
-              <button
-                key={index}
-                className={`text-4xl hover:scale-110 transition-transform ${selectedRating === 3 - index ? 'text-yellow-500' : ''}`}
-                onClick={() => handleRatingClick(3 - index)}
-                disabled={hasRated}
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
-          {hasRated && <p className="mt-2">Thank you for your feedback!</p>}
+      )}
+      {showSpinner && (
+        <div className="fixed inset-0 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-primary"></div>
         </div>
-
-        {article.relatedArticles && article.relatedArticles.length > 0 && (
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold mb-4">Related Articles</h2>
-            <ul className="space-y-2">
-              {article.relatedArticles.map((relatedArticle) => (
-                <li key={relatedArticle.slug}>
-                  <Link href={`/article/${relatedArticle.slug}`} className="text-blue-600 hover:underline">
-                    {relatedArticle.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </main>
+      )}
     </div>
-  );
+  )
 }

@@ -1,18 +1,25 @@
-import ArticleView from '@/components/article-view';
-import HeaderComponent from '@/components/header';
+// /src/app/articles/[slug]/page.tsx
 
-export default function ArticlePage() {
+import React from 'react';
+import ArticleView from '@/components/article-view';
+
+interface ArticlePageProps {
+  params: {
+    slug: string;
+  };
+}
+
+export default function ArticlePage({ params }: ArticlePageProps) {
+  const { slug } = params; // Extract slug from params
+
+  if (!slug) {
+    console.log("Slug is not available yet, rendering loading state.");
+    return <div>Loading...</div>;
+  }
+
   return (
     <div>
-      {/* Importing the HeaderComponent */}
-      <HeaderComponent />
-      
-      {/* Main Article View */}
-      <ArticleView />
-       {/* Footer */}
-       <footer className="bg-white mt-16 py-4 text-center text-sm text-gray-600">
-        Powered by Tokeet
-      </footer>
+      <ArticleView slug={slug} />
     </div>
   );
 }

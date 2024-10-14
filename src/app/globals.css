@@ -90,3 +90,11 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+.menu-icon {
+  fill: #000000; /* Default color */
+}
+
+.dark .menu-icon {
+  fill: #FFFFFF; /* Color for dark mode */
+}

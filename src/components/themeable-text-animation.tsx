@@ -49,17 +49,17 @@ export function ThemeableTextAnimation() {
   }, [text, isTyping, messageIndex])
 
   return (
-    <div className={`flex flex-col items-center justify-center min-h-screen w-full transition-colors duration-300 ${isDarkTheme ? 'bg-[#212121]' : 'bg-[#FFFFFF]'}`}>
-      <div className="w-full max-w-3xl mb-8">
+    <div className={`flex flex-col items-center justify-center min-h-screen transition-colors duration-300 ${isDarkTheme ? 'bg-[#212121]' : 'bg-[#FFFFFF]'}`}>
+      <div className="w-full max-w-3xl px-4 sm:px-6 lg:px-8 mb-8">
         <div className="flex items-center justify-center mb-8">
           <Image
             src={isDarkTheme 
               ? "/images/tokeet/dark_logo.png"
-              : "/images/tokeet/light_logo.png"
+              : "/images/tokeet/light_logo.jpg"
             }
             alt="Tokeet Logo"
-            width={150}
-            height={50}
+            width={240}
+            height={80}
             className="mr-4"
           />
           <h1 className={`text-2xl font-bold ${isDarkTheme ? 'text-white' : 'text-black'}`}>

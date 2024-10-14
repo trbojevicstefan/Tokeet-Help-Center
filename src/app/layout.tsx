@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { ThemeProvider } from '../context/ThemeProvider';
+import { SidebarAndSearchbarComponent } from '@/components/sidebar-and-searchbar';
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -28,7 +30,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        {/* Wrap the entire application with ThemeProvider */}
+        <ThemeProvider>
+          {/* Wrap all children with SidebarAndSearchbarComponent */}
+          <SidebarAndSearchbarComponent>
+          <main className="flex-1 overflow-y-auto">{children}</main>
+          </SidebarAndSearchbarComponent>
+        </ThemeProvider>
       </body>
     </html>
   );
