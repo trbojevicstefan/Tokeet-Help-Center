@@ -6,9 +6,6 @@ import Image from 'next/image'
 import { useTheme } from '@/context/ThemeProvider'
 
 const messages = [
-  "How can we help?",
-  "Use the search bar to find what you need...",
-  "Or explore our articles on the left...",
   "How do I connect my Airbnb Account?",
   "How do I set Dynamic Rates?",
   "Where can I check Booking Fees?",

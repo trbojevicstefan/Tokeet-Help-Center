@@ -177,15 +177,17 @@ export default function ArticleView({ slug }: ArticleViewProps) {
           <p className="text-center">Please try refreshing the page or check back later.</p>
         </div>
       ) : article ? (
-        <main className="container mx-auto max-w-3xl p-4 h-screen flex flex-col">
+        <main className="container mx-auto max-w-3xl p-4 h-screen overflow-y-auto pt-10">
           <div className="flex-grow overflow-y-auto pr-4">
             <h1 className="text-3xl font-bold text-center mb-4">{article.title}</h1>
-            {article.content && (
-              <PortableText value={article.content} components={myPortableTextComponents} />
-            )}
-            {article.markdownContent && (
-              <ReactMarkdown>{article.markdownContent}</ReactMarkdown>
-            )}
+            <div className={`border ${isDarkTheme ? 'border-gray-600' : 'border-gray-300'} shadow-lg p-6 rounded-lg bg-opacity-80`}>
+              {article.content && (
+                <PortableText value={article.content} components={myPortableTextComponents} />
+              )}
+              {article.markdownContent && (
+                <ReactMarkdown>{article.markdownContent}</ReactMarkdown>
+              )}
+            </div>
           </div>
         </main>
       ) : null}
