@@ -6,10 +6,10 @@ import Image from 'next/image'
 import { useTheme } from '@/context/ThemeProvider'
 
 const messages = [
+  "What is Booking Formula?",
   "How do I connect my Airbnb Account?",
   "How do I set Dynamic Rates?",
   "Where can I check Booking Fees?",
-  "What is Booking Formula?",
   "How do I set Pre-Checkin Message?"
 ]
 
