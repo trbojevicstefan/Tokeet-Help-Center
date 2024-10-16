@@ -212,7 +212,7 @@ export function SidebarAndSearchbarComponent({ children }: SidebarAndSearchbarCo
                 onChange={(e) => handleSearch(e.target.value)}
               />
               {searchQuery && searchResults.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white rounded-lg shadow-md dark:bg-[#171717]">
+                <div className="absolute left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white rounded-lg shadow-md dark:bg-gray-800 z-[60]">
                   {searchResults.map((result) => (
                     <Link
                       href={`/article/${result.slug}`}
