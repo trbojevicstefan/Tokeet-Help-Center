@@ -212,9 +212,9 @@ export default function ArticleView({ slug }: ArticleViewProps) {
               )}
             </div>
             {/* Article Rating Component with the same styling as the article container */}
-            <div className={`border ${isDarkTheme ? 'border-gray-600' : 'border-gray-300'} shadow-lg p-6 rounded-lg bg-opacity-80 mt-6`}>
+      
               <ArticleRating onRatingSubmit={(rating) => console.log(`User rated: ${rating}`)} />
-            </div>
+            
           </div>
         </main>
       ) : null}
