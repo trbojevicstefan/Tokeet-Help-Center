@@ -1,7 +1,8 @@
 // /src/app/articles/[slug]/page.tsx
-
+'use client'
 import React from 'react';
 import ArticleView from '@/components/article-view';
+
 
 interface ArticlePageProps {
   params: {

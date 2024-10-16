@@ -7,6 +7,7 @@ import ReactMarkdown from 'react-markdown';
 import { client } from '../utils/sanity/sanity.cli';
 import { urlFor } from '../utils/sanity/imageUrl'; // Import the URL generator utility
 import Image from 'next/image';
+import ArticleRating from '@/components/article-rating'; // Importing the rating component
 
 interface ArticleViewProps {
   slug: string;
@@ -209,6 +210,10 @@ export default function ArticleView({ slug }: ArticleViewProps) {
               {article.markdownContent && (
                 <ReactMarkdown>{article.markdownContent}</ReactMarkdown>
               )}
+            </div>
+            {/* Article Rating Component with the same styling as the article container */}
+            <div className={`border ${isDarkTheme ? 'border-gray-600' : 'border-gray-300'} shadow-lg p-6 rounded-lg bg-opacity-80 mt-6`}>
+              <ArticleRating onRatingSubmit={(rating) => console.log(`User rated: ${rating}`)} />
             </div>
           </div>
         </main>
