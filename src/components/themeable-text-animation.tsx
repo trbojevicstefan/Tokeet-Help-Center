@@ -46,7 +46,7 @@ export function ThemeableTextAnimation() {
   }, [text, isTyping, messageIndex])
 
   return (
-    <div className={`flex flex-col items-center justify-center min-h-screen transition-colors duration-300 ${isDarkTheme ? 'bg-[#212121]' : 'bg-[#FFFFFF]'}`}>
+    <div className={`flex flex-col items-center justify-center min-h-screen transition-colors duration-300 ${isDarkTheme ? 'bg-[#1E1E1E]' : 'bg-[#F5F5F5]'}`}>
       <div className="w-full max-w-3xl px-4 sm:px-6 lg:px-8 mb-8">
         <div className="flex items-center justify-center mb-8">
           <Image

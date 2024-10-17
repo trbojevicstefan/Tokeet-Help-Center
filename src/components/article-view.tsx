@@ -5,9 +5,10 @@ import { useTheme } from '@/context/ThemeProvider';
 import { PortableText, PortableTextReactComponents } from '@portabletext/react';
 import ReactMarkdown from 'react-markdown';
 import { client } from '../utils/sanity/sanity.cli';
-import { urlFor } from '../utils/sanity/imageUrl'; // Import the URL generator utility
+import { urlFor } from '../utils/sanity/imageUrl';
 import Image from 'next/image';
-import ArticleRating from '@/components/article-rating'; // Importing the rating component
+import ArticleRating from '@/components/article-rating';
+import { AlertTriangle, Info, FileText } from 'lucide-react';
 
 interface ArticleViewProps {
   slug: string;
@@ -19,19 +20,19 @@ interface ImageProps {
       _ref: string;
     };
     alt?: string;
-  }
+  };
 }
 
 interface BlockProps {
   value?: {
     body: string;
-  }
+  };
 }
 
 interface VideoEmbedProps {
   value?: {
     url: string;
-  }
+  };
 }
 
 type ArticleContent = {
@@ -114,7 +115,7 @@ export default function ArticleView({ slug }: ArticleViewProps) {
 
   const VideoEmbed = ({ value }: VideoEmbedProps) => (
     <div className="flex justify-center my-4 w-full">
-      <div className="relative w-full w-full aspect-video">
+      <div className="relative w-full aspect-video">
         <iframe
           className="absolute top-0 left-0 w-full h-full"
           src={value?.url}
@@ -147,18 +148,21 @@ export default function ArticleView({ slug }: ArticleViewProps) {
         );
       },
       dangerBlock: ({ value }: BlockProps) => (
-        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 my-4" role="alert">
-          <p>{value?.body}</p>
+        <div className={`flex items-start p-4 my-4 rounded-lg ${isDarkTheme ? 'bg-red-900 text-red-300' : 'bg-red-100 text-red-700'} border-l-4 border-red-500`} role="alert">
+          <AlertTriangle className={`h-6 w-6 mr-2 ${isDarkTheme ? 'text-red-300' : 'text-red-500'}`} />
+          <p className="flex-1">{value?.body}</p>
         </div>
       ),
       infoBlock: ({ value }: BlockProps) => (
-        <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 my-4" role="alert">
-          <p>{value?.body}</p>
+        <div className={`flex items-start p-4 my-4 rounded-lg ${isDarkTheme ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-700'} border-l-4 border-blue-500`} role="alert">
+          <Info className={`h-6 w-6 mr-2 ${isDarkTheme ? 'text-blue-300' : 'text-blue-500'}`} />
+          <p className="flex-1">{value?.body}</p>
         </div>
       ),
       noteBlock: ({ value }: BlockProps) => (
-        <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 my-4" role="alert">
-          <p>{value?.body}</p>
+        <div className={`flex items-start p-4 my-4 rounded-lg ${isDarkTheme ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-700'} border-l-4 border-green-500`} role="alert">
+          <FileText className={`h-6 w-6 mr-2 ${isDarkTheme ? 'text-green-300' : 'text-green-500'}`} />
+          <p className="flex-1">{value?.body}</p>
         </div>
       ),
       videoEmbed: VideoEmbed,
@@ -185,36 +189,38 @@ export default function ArticleView({ slug }: ArticleViewProps) {
       ),
     },
     block: {
-      h1: ({ children }) => <h1 className="text-4xl font-bold my-6">{children}</h1>,
-      h2: ({ children }) => <h2 className="text-3xl font-semibold my-4">{children}</h2>,
-      normal: ({ children }) => <p className="mb-4">{children}</p>,
-      hr: () => <hr className="my-4 border-gray-300" />, // Added hr handler
+      h1: ({ children }) => <h1 className="text-5xl font-extrabold my-8 text-center border-b-2 border-gray-300 pb-4">{children}</h1>,
+      h2: ({ children }) => <h2 className="text-4xl font-semibold my-6 border-b border-gray-300 pb-2">{children}</h2>,
+      normal: ({ children }) => <p className="mb-4 leading-relaxed text-lg">{children}</p>,
+      ul: ({ children }) => <ul className="list-disc list-inside ml-6 border-l-2 border-gray-300 pl-4 relative">
+        {React.Children.map(children, (child,) => (
+          <li className="relative mb-2 pl-2 before:absolute before:top-1/2 before:left-[-10px] before:w-2 before:h-2 before:bg-gray-500 before:rounded-full">
+            {child}
+          </li>
+        ))}
+      </ul>,
+      hr: () => <hr className="my-6 border-gray-400" />,
     },
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${isDarkTheme ? 'bg-[#212121] text-white' : 'bg-white text-black'}`}>
+    <div className={`min-h-screen transition-colors duration-300 ${isDarkTheme ? 'bg-[#111827] text-white' : 'bg-[#F9FAFB] text-black'} overflow-y-auto`}>
       {error ? (
         <div className="container mx-auto max-w-3xl p-4 h-screen flex flex-col justify-center items-center">
           <h2 className="text-2xl font-bold text-red-600 text-center mb-4">Failed to load article.</h2>
           <p className="text-center">Please try refreshing the page or check back later.</p>
         </div>
       ) : article ? (
-        <main className="container mx-auto max-w-3xl p-4 h-screen overflow-y-auto pt-10">
-          <div className="flex-grow overflow-y-auto pr-4">
-            <h1 className="text-3xl font-bold text-center mb-4">{article.title}</h1>
-            <div className={`border ${isDarkTheme ? 'border-gray-600' : 'border-gray-300'} shadow-lg p-6 rounded-lg bg-opacity-80`}>
-              {article.content && (
-                <PortableText value={article.content} components={myPortableTextComponents} />
-              )}
-              {article.markdownContent && (
-                <ReactMarkdown>{article.markdownContent}</ReactMarkdown>
-              )}
-            </div>
-            {/* Article Rating Component with the same styling as the article container */}
-      
-              <ArticleRating onRatingSubmit={(rating) => console.log(`User rated: ${rating}`)} />
-            
+        <main className="container pt-16 mx-auto max-w-3xl p-4 h-full">
+          <div className={`border ${isDarkTheme ? 'border-gray-600' : 'border-gray-300'} p-6 rounded-lg bg-opacity-80`}>
+            <h1 className="text-4xl font-light text-center mb-6 border-b border-gray-300 pb-2" style={{ fontFamily: 'Arial, sans-serif' }}>{article.title}</h1>
+            {article.content && (
+              <PortableText value={article.content} components={myPortableTextComponents} />
+            )}
+            {article.markdownContent && (
+              <ReactMarkdown>{article.markdownContent}</ReactMarkdown>
+            )}
+            <ArticleRating onRatingSubmit={(rating) => console.log(`User rated: ${rating}`)} />
           </div>
         </main>
       ) : null}
