@@ -2,12 +2,8 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import React, { useState, useEffect, ChangeEvent } from 'react';
-import { 
-  Search, Globe, Users, LogIn, Share, 
-  ChevronRight, ChevronDown, Moon, Sun, 
-  X, Menu 
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Globe, Users, LogIn, Share, ChevronRight, ChevronDown, Moon, Sun, X, PanelLeftCloseIcon, Menu } from 'lucide-react';
 import { fetchHelpCategories } from '@/utils/sanity/HelpCenterData';
 import { useTheme } from '@/context/ThemeProvider';
 
@@ -57,14 +53,19 @@ interface SidebarAndSearchbarComponentProps {
 
 export function SidebarAndSearchbarComponent({ children }: SidebarAndSearchbarComponentProps) {
   const { isDarkTheme, toggleTheme } = useTheme();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [openCategories, setOpenCategories] = useState<string[]>([]);
   const [opensubcategory, setOpensubcategory] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [isMediumScreen, setIsMediumScreen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const pathname = usePathname();
   const [currentSlug, setCurrentSlug] = useState<string | null>(null);
   const [searchResults, setSearchResults] = useState<Article[]>([]);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const toggleDrawer = () => setDrawerOpen(!drawerOpen);
 
   useEffect(() => {
     if (pathname) {
@@ -74,14 +75,18 @@ export function SidebarAndSearchbarComponent({ children }: SidebarAndSearchbarCo
   }, [pathname]);
 
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 768) {
-        setSidebarOpen(true); // Keep sidebar open on larger screens
-      }
+    const checkScreenSize = () => {
+      const smallScreen = window.innerWidth < 640;
+      const mediumScreen = window.innerWidth >= 640 && window.innerWidth < 1024;
+      setIsSmallScreen(smallScreen);
+      setIsMediumScreen(mediumScreen);
+      setSidebarOpen(!smallScreen && !mediumScreen);
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+
+    return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
   const copyShareLink = () => {
@@ -147,7 +152,7 @@ export function SidebarAndSearchbarComponent({ children }: SidebarAndSearchbarCo
     );
   };
   const handleArticleClick = () => {
-    if (window.innerWidth < 768) {
+    if (isSmallScreen) {
       setSidebarOpen(false);
     }
   };
@@ -177,153 +182,95 @@ export function SidebarAndSearchbarComponent({ children }: SidebarAndSearchbarCo
     }
   };
 
-  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
-    handleSearch(e.target.value);
+  const handleSearchResultClick = () => {
+    setSearchQuery('');
+    setSearchResults([]);
   };
 
   return (
     <div className={`flex h-screen flex-col overflow-hidden ${isDarkTheme ? 'dark' : ''}`}>
-      {/* Top Header */}
-      <header className="sticky top-0 z-50 w-full bg-white shadow-sm dark:bg-gray-900">
-  <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-    <div className="flex h-16 items-center justify-between">
-      {/* Container for Logo and Menu Button */}
-      <div className="flex items-center space-x-4"> {/* space-x-4 will give some spacing between logo and menu */}
-        <img
-          src="/images/tokeet/light_logo.png"
-          alt="Tokeet Logo"
-          width={120}
-          height={40}
-          className="h-8 w-auto"
-        />
-        <button
-          onClick={toggleSidebar}
-          className="p-1 hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 focus:outline-none"
-          aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
-          aria-expanded={sidebarOpen}
-        >
-          {sidebarOpen ? (
-            <X className="h-6 w-6 text-gray-700 dark:text-gray-200" aria-hidden="true" />
-          ) : (
-            <Menu className="h-6 w-6 text-gray-700 dark:text-gray-200" aria-hidden="true" />
-          )}
-        </button>
-      </div>
-            {/* Centered Search Bar */}
-            <div className="flex-1 flex items-center justify-center px-2 lg:ml-6 lg:justify-center relative">
-              <div className="w-full max-w-lg relative">
-                <label htmlFor="search" className="sr-only">Search</label>
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    <Search className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                  </div>
-                  <input
-                    id="search"
-                    name="search"
-                    className="block w-full rounded-md border border-gray-300 bg-white py-2 pl-10 pr-3 leading-5 placeholder-gray-500 focus:border-indigo-500 focus:placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="How can we help?"
-                    type="search"
-                    value={searchQuery}
-                    onChange={handleSearchChange}
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery('')}
-                      className="absolute inset-y-0 right-0 flex items-center pr-3"
-                      aria-label="Clear search"
-                    >
-                      <X className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                    </button>
-                  )}
-                </div>
-                {searchQuery && searchResults.length > 0 && (
-                  <div className="absolute left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white rounded-lg shadow-md dark:bg-gray-800 z-10">
-                    {searchResults.map((result) => (
-                      <Link
-                        href={`/article/${result.slug}`}
-                        key={result.slug}
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-                        onClick={() => {
-                          setSearchQuery('');
-                          setSearchResults([]);
-                        }}
-                      >
-                        <div>
-                          <strong>{result.title}</strong>
-                          {result.description && (
-                            <p className="text-xs text-gray-500 mt-1 dark:text-gray-400">
-                              {result.description}
-                            </p>
-                          )}
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+      {/* Top search bar */}
+      <header className="w-full bg-white shadow-md dark:bg-gray-800 z-20">
+        <div className="flex items-center justify-between p-4">
+          {/* Left: Logo and Menu Button */}
+          <div className="flex items-center space-x-4">
+            <img
+              src="/images/tokeet/light_logo.png"
+              alt="Tokeet Logo"
+              width={120}
+              height={40}
+              className="h-auto"
+            />
+            <button
+                onClick={toggleSidebar}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200 dark:hover:bg-gray-700"
+              >
+                <PanelLeftCloseIcon className="h-6 w-6 text-gray-600 dark:text-gray-300" />
+              </button>
 
-            {/* Navigation Links */}
-            <div className="hidden lg:flex items-center space-x-4">
-              <Link href="https://tokeet.com" className="text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white">
-                <Globe className="h-6 w-6" aria-hidden="true" />
-              </Link>
-              <Link href="https://tokeet.com/community" className="text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white">
-                <Users className="h-6 w-6" aria-hidden="true" />
-              </Link>
-              <Link href="https://app.tokeet.com/login" className="text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white">
-                <LogIn className="h-6 w-6" aria-hidden="true" />
-              </Link>
-              <button
-                onClick={copyShareLink}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white focus:outline-none"
-                aria-label="Share link"
-              >
-                <Share className="h-6 w-6" aria-hidden="true" />
-              </button>
-              <button
-                onClick={toggleTheme}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white focus:outline-none"
-                aria-label="Toggle theme"
-              >
-                {isDarkTheme ? <Sun className="h-6 w-6" aria-hidden="true" /> : <Moon className="h-6 w-6" aria-hidden="true" />}
-              </button>
+          </div>
+
+          {/* Center: Search Bar */}
+          <div className="flex-1 items-center justify-center px-4 flex">
+            <div className="relative w-full max-w-2xl">
+              <input
+                type="text"
+                placeholder="How can we help?"
+                className="w-full rounded-full border border-gray-300 bg-white py-2 pl-10 pr-10 text-gray-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:focus:border-blue-400 dark:focus:ring-blue-300 transition-shadow duration-200"
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+              />
+              <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              )}
             </div>
           </div>
-        </div>
 
-        {/* Breadcrumbs */}
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-2">
-          <nav className="flex" aria-label="Breadcrumb">
-            <ol className="inline-flex items-center space-x-1 md:space-x-3">
-              <li className="inline-flex items-center">
-                <Link href="/" className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
-                  Home
-                </Link>
-              </li>
-              {/* Dynamically generate breadcrumbs based on the current path */}
-              {pathname && pathname !== '/' && pathname.split('/').filter(Boolean).map((segment, index, array) => {
-                const href = '/' + array.slice(0, index + 1).join('/');
-                const isLast = index === array.length - 1;
-                const displayName = segment.charAt(0).toUpperCase() + segment.slice(1);
-                return (
-                  <li key={href}>
-                    {isLast ? (
-                      <span className="flex items-center text-sm font-medium text-gray-500 dark:text-gray-400">
-                        <ChevronRight className="w-4 h-4 mx-1" aria-hidden="true" />
-                        {displayName}
-                      </span>
-                    ) : (
-                      <Link href={href} className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
-                        <ChevronRight className="w-4 h-4 mx-1" aria-hidden="true" />
-                        {displayName}
-                      </Link>
-                    )}
-                  </li>
-                );
-              })}
-            </ol>
-          </nav>
+          {/* Right: Links */}
+          <div className="hidden md:flex space-x-2">
+            <Link href="https://tokeet.com" target="_blank" rel="noopener noreferrer" className="flex items-center rounded-full px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200 dark:text-gray-200 dark:hover:bg-gray-700">
+              <Globe className="h-4 w-4 mr-2" />
+              <span>tokeet.com</span>
+            </Link>
+            <Link href="https://tokeet.com/community" target="_blank" rel="noopener noreferrer" className="flex items-center rounded-full px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200 dark:text-gray-200 dark:hover:bg-gray-700">
+              <Users className="h-4 w-4 mr-2" />
+              <span>Community</span>
+            </Link>
+            <Link href="https://app.tokeet.com/login" target="_blank" rel="noopener noreferrer" className="flex items-center rounded-full px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200 dark:text-gray-200 dark:hover:bg-gray-700">
+              <LogIn className="h-4 w-4 mr-2" />
+              <span>Login</span>
+            </Link>
+            <button
+              onClick={copyShareLink}
+              className="flex items-center rounded-full px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200 dark:text-gray-200 dark:hover:bg-gray-700"
+            >
+              <Share className="h-4 w-4 mr-2" />
+              <span>Share</span>
+            </button>
+            <button
+              onClick={toggleTheme}
+              className="flex items-center rounded-full px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200 dark:text-gray-200 dark:hover:bg-gray-700"
+            >
+              {isDarkTheme ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="md:hidden">
+                      <button
+              onClick={toggleDrawer}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 dark:hover:bg-gray-700"
+            >
+              <Menu className="h-6 w-6 text-gray-600 dark:text-gray-300" />
+            </button>
+
+          </div>
         </div>
       </header>
 
@@ -332,18 +279,16 @@ export function SidebarAndSearchbarComponent({ children }: SidebarAndSearchbarCo
         {/* Sidebar */}
         <aside
           className={`${
-            sidebarOpen
-              ? 'fixed inset-y-0 left-0 z-40 w-64 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0'
-              : 'transform -translate-x-full transition-transform duration-300 ease-in-out md:translate-x-0 md:w-0'
-          } bg-white shadow-lg overflow-hidden flex flex-col dark:bg-gray-900`}
+            sidebarOpen ? 'w-64' : 'w-0'
+          } bg-white shadow-lg transition-all duration-300 ease-in-out overflow-hidden flex flex-col dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-10`}
         >
-          <div className="flex-1 overflow-y-auto">
-            <nav className="space-y-1 p-2">
+          <div className="flex-1 overflow-y-auto pt-20">
+            <nav className="space-y-1 p-4">
               {categories.map((category) => (
-                <div key={category.title} className="mb-2">
+                <div key={category.title} className="mb-4">
                   <button
                     onClick={() => toggleCategory(category.title)}
-                    className="flex w-full items-center justify-between rounded-lg p-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700 focus:outline-none"
+                    className="flex w-full items-center justify-between rounded-lg p-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200 dark:text-gray-200 dark:hover:bg-gray-700"
                   >
                     {category.title}
                     {openCategories.includes(category.title) ? (
@@ -358,8 +303,9 @@ export function SidebarAndSearchbarComponent({ children }: SidebarAndSearchbarCo
                         <div key={subcategory.title}>
                           <button
                             onClick={() => togglesubcategory(subcategory.title)}
-                            className="flex w-full items-center justify-between rounded-lg p-2 text-left text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 focus:outline-none"
+                            className="flex w-full items-center justify-between rounded-lg p-2 text-left text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors duration-200 dark:text-gray-300 dark:hover:bg-gray-700"
                           >
+                            
                             {subcategory.title}
                             {opensubcategory.includes(subcategory.title) ? (
                               <ChevronDown className="h-4 w-4" />
@@ -377,7 +323,7 @@ export function SidebarAndSearchbarComponent({ children }: SidebarAndSearchbarCo
                                     currentSlug === article.slug
                                       ? 'bg-gray-100 text-blue-500 dark:bg-gray-700 dark:text-blue-400'
                                       : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
-                                  } no-underline`}
+                                  } transition-colors duration-200`}
                                   onClick={handleArticleClick}
                                 >
                                   {article.title}
@@ -395,7 +341,7 @@ export function SidebarAndSearchbarComponent({ children }: SidebarAndSearchbarCo
                             currentSlug === article.slug
                               ? 'bg-gray-100 text-blue-500 dark:bg-gray-700 dark:text-blue-400'
                               : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
-                          } no-underline`}
+                          } transition-colors duration-200`}
                           onClick={handleArticleClick}
                         >
                           {article.title}
@@ -410,11 +356,80 @@ export function SidebarAndSearchbarComponent({ children }: SidebarAndSearchbarCo
         </aside>
 
         {/* Main content */}
-        <main className={`flex-1 overflow-y-auto p-4 md:p-6 ${sidebarOpen ? 'md:ml-64' : ''}`}>
-          {/* Breadcrumbs will appear here if placed outside the header */}
-          {children}
+        <main className="flex-1 overflow-y-auto bg-white dark:bg-gray-900 transition-colors duration-300">
+          <div className="mx-auto max-w-3xl px-4 py-8">
+            {children}
+          </div>
         </main>
       </div>
+
+      {/* Search results */}
+      {searchResults.length > 0 && (
+        <div className="absolute top-16 left-1/2 transform -translate-x-1/2 w-full max-w-2xl bg-white dark:bg-gray-800 shadow-lg rounded-lg z-30">
+          <div className="p-4">
+            <h3 className="text-lg font-semibold mb-2 text-gray-800 dark:text-gray-200">Search Results</h3>
+            <ul className="space-y-2">
+              {searchResults.map((result) => (
+                <li key={result.slug}>
+                  <Link
+                    href={`/article/${result.slug}`}
+                    className="block p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                    onClick={handleSearchResultClick}
+                  >
+                    <h4 className="font-medium text-blue-600 dark:text-blue-400">{result.title}</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">{result.description}</p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile drawer menu */}
+      {drawerOpen && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50" onClick={toggleDrawer}>
+          <div
+            className="fixed top-0 right-0 h-full w-64 bg-white shadow-lg dark:bg-gray-800 p-4 transform transition-transform duration-300 ease-in-out"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={toggleDrawer}
+              className="absolute top-4 right-4 p-2 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 transition-colors duration-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <nav className="mt-16 space-y-4">
+              <Link href="https://tokeet.com" target="_blank" rel="noopener noreferrer" className="flex items-center rounded-lg p-2 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200 dark:text-gray-200 dark:hover:bg-gray-700">
+                <Globe className="h-4 w-4 mr-2" />
+                tokeet.com
+              </Link>
+              <Link href="https://tokeet.com/community" target="_blank" rel="noopener noreferrer" className="flex items-center rounded-lg p-2 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200 dark:text-gray-200 dark:hover:bg-gray-700">
+                <Users className="h-4 w-4 mr-2" />
+                Community
+              </Link>
+              <Link href="https://app.tokeet.com/login" target="_blank" rel="noopener noreferrer" className="flex items-center rounded-lg p-2 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200 dark:text-gray-200 dark:hover:bg-gray-700">
+                <LogIn className="h-4 w-4 mr-2" />
+                Login
+              </Link>
+              <button
+                onClick={copyShareLink}
+                className="flex w-full items-center rounded-lg p-2 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200 dark:text-gray-200 dark:hover:bg-gray-700"
+              >
+                <Share className="h-4 w-4 mr-2" />
+                Share
+              </button>
+              <button
+                onClick={toggleTheme}
+                className="flex w-full items-center rounded-lg p-2 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200 dark:text-gray-200 dark:hover:bg-gray-700"
+              >
+                {isDarkTheme ? <Sun className="h-4 w-4 mr-2" /> : <Moon className="h-4 w-4 mr-2" />}
+                Toggle Theme
+              </button>
+            </nav>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

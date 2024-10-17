@@ -19,7 +19,7 @@ export default function ArticlePage({ params }: ArticlePageProps) {
   }
 
   return (
-    <div>
+    <div >
       <ArticleView slug={slug} />
     </div>
   );

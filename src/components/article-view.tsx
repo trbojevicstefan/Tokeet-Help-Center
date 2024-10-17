@@ -114,7 +114,7 @@ export default function ArticleView({ slug }: ArticleViewProps) {
 
   const VideoEmbed = ({ value }: VideoEmbedProps) => (
     <div className="flex justify-center my-4 w-full">
-      <div className="relative w-full max-w-[960px] aspect-video">
+      <div className="relative w-full w-full aspect-video">
         <iframe
           className="absolute top-0 left-0 w-full h-full"
           src={value?.url}
